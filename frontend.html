@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Gallery</title>
+</head>
+<body>
+    <h1>Image Gallery</h1>
+    <form id="uploadForm" enctype="multipart/form-data">
+        <input type="file" name="image" required>
+        <button type="submit">Upload Image</button>
+    </form>
+
+    <div id="imageList">
+        <!-- Images will be displayed here -->
+    </div>
+
+    <script>
+        const imageList = document.getElementById("imageList");
+        const uploadForm = document.getElementById("uploadForm");
+
+        // Fetch and display images
+        async function fetchImages() {
+            imageList.innerHTML = "";
+
+            const response = await fetch("http://localhost:3000/images");
+            const images = await response.json();
+
+            images.forEach(image => {
+                const imgContainer = document.createElement("div");
+                imgContainer.className = "image-container";
+
+                const img = document.createElement("img");
+                img.src = `./uploads/${image.url}`;
+                img.alt = image.title;
+
+                const title = document.createElement("input");
+                title.type = "text";
+                title.placeholder = "Image Title";
+                title.value = image.title;
+                title.addEventListener("change", () => updateImage(image.id, "title", title.value));
+
+                const favoriteBtn = document.createElement("button");
+                favoriteBtn.textContent = image.isFavorite ? "Unfavorite" : "Favorite";
+                favoriteBtn.addEventListener("click", () => toggleFavorite(image.id, !image.isFavorite));
+
+                const deleteBtn = document.createElement("button");
+                deleteBtn.textContent = "Delete";
+                deleteBtn.addEventListener("click", () => deleteImage(image.id));
+
+                imgContainer.appendChild(img);
+                imgContainer.appendChild(title);
+                imgContainer.appendChild(favoriteBtn);
+                imgContainer.appendChild(deleteBtn);
+
+                imageList.appendChild(imgContainer);
+            });
+        }
+
+        // Upload an image
+        uploadForm.addEventListener("submit", async (event) => {
+            event.preventDefault();
+            
+            const formData = new FormData(uploadForm);
+
+            try {
+                const response = await fetch("http://localhost:3000/upload", {
+                    method: "POST",
+                    body: formData,
+                });
+
+                if (response.ok) {
+                    fetchImages();
+                } else {
+                    console.error("Image upload failed.");
+                }
+            } catch (error) {
+                console.error("Image upload error:", error);
+            }
+        });
+
+        // Update image information
+        async function updateImage(id, action, value) {
+            try {
+                const response = await fetch(`http://localhost:3000/images/${id}`, {
+                    method: "PUT",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({ action, title: value }),
+                });
+
+                if (response.ok) {
+                    fetchImages();
+                } else {
+                    console.error("Image update failed.");
+                }
+            } catch (error) {
+                console.error("Image update error:", error);
+            }
+        }
+
+        // Toggle image favorite status
+        async function toggleFavorite(id, isFavorite) {
+            const action = isFavorite ? "favorite" : "unfavorite";
+            updateImage(id, action, "");
+        }
+
+        // Delete an image
+        async function deleteImage(id) {
+            try {
+                const response = await fetch(`http://localhost:3000/images/${id}`, {
+                    method: "DELETE",
+                });
+
+                if (response.ok) {
+                    fetchImages();
+                } else {
+                    console.error("Image deletion failed.");
+                }
+            } catch (error) {
+                console.error("Image deletion error:", error);
+            }
+        }
+
+        // Initial fetch of images
+        fetchImages();
+    </script>
+
+    <style>
+        .image-container {
+            border: 1px solid #ccc;
+            margin: 10px;
+            padding: 10px;
+            display: inline-block;
+            text-align: center;
+        }
+        img {
+            max-width: 100%;
+            height: auto;
+        }
+    </style>
+</body>
+</html>
