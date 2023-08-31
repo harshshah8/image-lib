@@ -1,0 +1,15 @@
+1. health
+    curl --location 'localhost:3000/health'
+2. Upload Image
+    curl --location 'localhost:3000/upload' \
+    --form 'image=@"/Users/harsh/Downloads/1280px-Sunflower_from_Silesia2.jpg"'
+3. Get all images
+    curl --location 'localhost:3000/images'
+4. Update images
+    curl --location --request PUT 'localhost:3000/images/1' \
+    --header 'Content-Type: application/json' \
+    --data '{
+        "action": "favorite"
+    }'
+5. Delete Image
+    curl --location --request DELETE 'localhost:3000/images/1'
